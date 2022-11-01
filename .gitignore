@@ -1,6 +1,6 @@
 # Data files
 training_data
-
+Pipfile.lock
 # IDE files
 .vscode
 .idea
