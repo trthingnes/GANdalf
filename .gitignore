@@ -1,3 +1,10 @@
+# Data files
+training_data
+model_data
+
+# Mac OS related crap
+.DS_Store
+
 # IDE files
 .vscode
 .idea
