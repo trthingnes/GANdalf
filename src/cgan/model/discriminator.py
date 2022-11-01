@@ -1,0 +1,28 @@
+import torch.nn as nn
+
+
+class Discriminator(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+        self.label_emb = nn.Embedding(10, 10)
+
+        self.model = nn.Sequential(
+            # big todo
+
+            # Kokt kode
+            nn.Linear(794, 1024),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.3),
+            nn.Linear(1024, 512),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.3),
+            nn.Linear(512, 256),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.3),
+            nn.Linear(256, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x, labels):
+        print("tood")  # todo
