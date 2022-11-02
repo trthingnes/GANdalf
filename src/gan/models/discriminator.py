@@ -24,6 +24,8 @@ class Discriminator(nn.Module):
             nn.Conv2d(d_hidden * 8, 1, 4, 1, 0, bias=False),
             nn.Sigmoid(),
         )
-
+        
+    
     def forward(self, input_data):
         return self.main(input_data).view(-1, 1).squeeze(1)
+
