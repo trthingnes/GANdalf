@@ -1,5 +1,3 @@
-import torch
-import torch.nn
 import torch.jit
 
 default_directory = "model_data"
