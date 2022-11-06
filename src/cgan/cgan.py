@@ -12,9 +12,10 @@ from src.util import get_device
 
 
 class CGAN:
-    def __init__(self, lr=1e-4, seed=42, batch_size=32, noise_size=100, allow_cuda=True):
-        self.device = get_device(allow_cuda, seed)
+    def __init__(self, n_epochs=30, lr=1e-4, seed=42, batch_size=32, noise_size=100, allow_cuda=True):
+        self.n_epochs = n_epochs
         self.lr_g = self.lr_d = lr
+        self.device = get_device(allow_cuda, seed)
 
         # Define dataset and dataloader
         dataset = FashionMNIST(transform=transforms.Compose([
@@ -28,6 +29,7 @@ class CGAN:
         self.noise_size = noise_size
         self.generator = Generator(n_pixels_in=noise_size).to(self.device)
         self.discriminator = Discriminator().to(self.device)
+
         # Define optimizers and loss function
         self.loss = nn.BCELoss()
         self.optim_g = optim.Adam(self.generator.parameters(), lr=self.lr_g)
@@ -73,3 +75,23 @@ class CGAN:
 
         return loss_d.data[0]
 
+    def train(self):
+        n_critic = 5
+        display_step = 300
+
+        for epoch in range(self.n_epochs):
+            print(f"Epoch {epoch}:")
+            for i, (images, labels) in enumerate(self.dataloader):
+                real_images = Variable(images).to(self.device)
+                labels = Variable(labels).to(self.device)
+
+                self.generator.train()
+                loss_g = self.step_generator()
+                loss_d = self.step_discriminator(real_images, labels)
+                self.generator.eval()
+
+            print(f"Generator loss: {loss_g}, Discriminator loss: {loss_d}")
+            noise = Variable(torch.randn(9, 100)).to(self.device)
+            labels = Variable(torch.LongTensor(np.arange(9))).to(self.device)
+
+            sample_images = self.generator(noise, labels).unsqueeze(1).data.cpu()
