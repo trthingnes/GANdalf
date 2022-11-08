@@ -14,7 +14,7 @@ from models.generator import Generator
 from models.discriminator import Discriminator
 from util import get_device
 
-ALLOW_CUDA = False
+ALLOW_CUDA = True
 DATA_PATH = "./training_data"
 BATCH_SIZE = 128
 IMAGE_CHANNEL = 1
@@ -40,14 +40,14 @@ dataloader = torch.utils.data.DataLoader(
 )
 
 # Create the generator
-netG = Generator(Z_DIM, G_HIDDEN, IMAGE_CHANNEL).to(device)
-netG.apply(weights_init)
-print(netG)
+generator = Generator(Z_DIM, G_HIDDEN, IMAGE_CHANNEL).to(device)
+generator.apply(weights_init)
+print(generator)
 
 # Create the discriminator
-netD = Discriminator(IMAGE_CHANNEL, D_HIDDEN).to(device)
-netD.apply(weights_init)
-print(netD)
+discriminator = Discriminator(IMAGE_CHANNEL, D_HIDDEN).to(device)
+discriminator.apply(weights_init)
+print(discriminator)
 
 # Initialize BCELoss function
 criterion = nn.BCELoss()
@@ -56,8 +56,8 @@ criterion = nn.BCELoss()
 viz_noise = torch.randn(BATCH_SIZE, Z_DIM, 1, 1, device=device)
 
 # Setup Adam optimizers for both G and D
-optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(0.5, 0.999))
-optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(0.5, 0.999))
+optimizerD = optim.Adam(discriminator.parameters(), lr=lr, betas=(0.5, 0.999))
+optimizerG = optim.Adam(generator.parameters(), lr=lr, betas=(0.5, 0.999))
 
 
 # Training Loop
@@ -73,13 +73,13 @@ for epoch in range(EPOCH_NUM):
     for i, data in enumerate(dataloader, 0):
 
         # (1) Update the discriminator with real data
-        netD.zero_grad()
+        discriminator.zero_grad()
         # Format batch
         real_cpu = data[0].to(device)
         b_size = real_cpu.size(0)
         label = torch.full((b_size,), REAL_LABEL, dtype=torch.float, device=device)
         # Forward pass real batch through D
-        output = netD(real_cpu).view(-1)
+        output = discriminator(real_cpu).view(-1)
         # Calculate loss on all-real batch
         errD_real = criterion(output, label)
         # Calculate gradients for D in backward pass
@@ -90,10 +90,10 @@ for epoch in range(EPOCH_NUM):
         # Generate batch of latent vectors
         noise = torch.randn(b_size, Z_DIM, 1, 1, device=device)
         # Generate fake image batch with G
-        fake = netG(noise)
+        fake = generator(noise)
         label.fill_(FAKE_LABEL)
         # Classify all fake batch with D
-        output = netD(fake.detach()).view(-1)
+        output = discriminator(fake.detach()).view(-1)
         # Calculate D's loss on the all-fake batch
         errD_fake = criterion(output, label)
         # Calculate the gradients for this batch, accumulated (summed) with previous gradients
@@ -105,10 +105,10 @@ for epoch in range(EPOCH_NUM):
         optimizerD.step()
 
         # (3) Update the generator with fake data
-        netG.zero_grad()
+        generator.zero_grad()
         label.fill_(REAL_LABEL)  # fake labels are real for generator cost
         # Since we just updated D, perform another forward pass of all-fake batch through D
-        output = netD(fake).view(-1)
+        output = discriminator(fake).view(-1)
         # Calculate G's loss based on this output
         errG = criterion(output, label)
         # Calculate gradients for G
@@ -143,7 +143,7 @@ for epoch in range(EPOCH_NUM):
             (epoch == EPOCH_NUM - 1) and (i == len(dataloader) - 1)
         ):
             with torch.no_grad():
-                fake = netG(viz_noise).detach().cpu()
+                fake = generator(viz_noise).detach().cpu()
             img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
 
         iters += 1
@@ -184,3 +184,6 @@ def weights_init(m):
     elif classname.find("BatchNorm") != -1:
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
+
+def trainingLoop():
+    return
