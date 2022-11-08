@@ -24,8 +24,12 @@ class Generator(nn.Module):
     def hidden_layer(in_features: int, out_features: int):
         negative_slope = 0.2
         return (
-            nn.Linear(in_features, out_features),  # Linear model xW + b (see lecture 1: linear regression)
-            nn.LeakyReLU(negative_slope, inplace=True),  # Negative values get shrinked, see docs.
+            nn.Linear(
+                in_features, out_features
+            ),  # Linear model xW + b (see lecture 1: linear regression)
+            nn.LeakyReLU(
+                negative_slope, inplace=True
+            ),  # Negative values get shrinked, see docs.
         )
 
     def forward(self, noise, labels):
@@ -35,10 +39,22 @@ class Generator(nn.Module):
         :param labels: Labels belonging to the images. Shape: (n)
         :return: Generated images. Shape: (n, sqrt(n_pixels_out), sqrt(n_pixels_out))
         """
-        n_images = noise.size(0)  # Noise is 3 dimentions, the first of which is the number of noise images
-        noise = noise.view(n_images, self.n_pixels_in)  # Turn the 2D noise "images" into a 1D list of numbers
-        label_dummies = self.label_embedding(labels)  # Get the "dummy" values for the label value
+        n_images = noise.size(
+            0
+        )  # Noise is 3 dimentions, the first of which is the number of noise images
+        noise = noise.view(
+            n_images, self.n_pixels_in
+        )  # Turn the 2D noise "images" into a 1D list of numbers
+        label_dummies = self.label_embedding(
+            labels
+        )  # Get the "dummy" values for the label value
 
-        images = torch.cat([noise, label_dummies], 1)  # Add the label data to each image
-        size = int(math.sqrt(self.n_pixels_out))  # The width and height of the image is the square root of n_pixels_out
-        return self.model(images).view(images.size(0), size, size)  # Return a 3D list of images.
+        images = torch.cat(
+            [noise, label_dummies], 1
+        )  # Add the label data to each image
+        size = int(
+            math.sqrt(self.n_pixels_out)
+        )  # The width and height of the image is the square root of n_pixels_out
+        return self.model(images).view(
+            images.size(0), size, size
+        )  # Return a 3D list of images.
