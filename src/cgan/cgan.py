@@ -1,4 +1,5 @@
 import numpy as np
+import time
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -6,9 +7,9 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 
-from src.cgan.dataset import FashionMNIST
-from src.cgan.model import Generator, Discriminator
-from src.util import get_device
+from dataset import FashionMNIST
+from model import Generator, Discriminator
+from ..util import get_device, save_model
 
 
 class CGAN:
@@ -76,9 +77,7 @@ class CGAN:
         return loss_d.data[0]
 
     def train(self):
-        n_critic = 5
-        display_step = 300
-
+        loss_g = loss_d = 0
         for epoch in range(self.n_epochs):
             print(f"Epoch {epoch}:")
             for i, (images, labels) in enumerate(self.dataloader):
@@ -91,7 +90,8 @@ class CGAN:
                 self.generator.eval()
 
             print(f"Generator loss: {loss_g}, Discriminator loss: {loss_d}")
-            noise = Variable(torch.randn(9, 100)).to(self.device)
-            labels = Variable(torch.LongTensor(np.arange(9))).to(self.device)
 
-            sample_images = self.generator(noise, labels).unsqueeze(1).data.cpu()
+        print("Saving models...")
+        timestamp = time.ctime().replace(" ", "-")
+        save_model(self.generator, f"generator_{timestamp}")
+        save_model(self.discriminator, f"discriminator_{timestamp}")
