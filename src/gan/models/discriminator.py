@@ -2,11 +2,11 @@ import torch.nn as nn
 
 
 class Discriminator(nn.Module):
-    def __init__(self, image_channel, d_hidden):
+    def __init__(self, n_pixels, d_hidden):
         super(Discriminator, self).__init__()
         self.main = nn.Sequential(
             # 1st layer
-            nn.Conv2d(image_channel, d_hidden, 4, 2, 1, bias=False),
+            nn.Conv2d(n_pixels, d_hidden, 4, 2, 1, bias=False),
             nn.LeakyReLU(0.2, inplace=True),
             # 2nd layer
             nn.Conv2d(d_hidden, d_hidden * 2, 4, 2, 1, bias=False),

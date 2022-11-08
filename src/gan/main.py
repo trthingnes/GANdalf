@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from dataset import get_preprocessed_dataset
 from models.generator import Generator
 from models.discriminator import Discriminator
-from util import get_device, weights_init
+from util import get_device
 
 ALLOW_CUDA = False
 DATA_PATH = "./training_data"
@@ -174,3 +174,13 @@ plt.axis("off")
 plt.title("Fake Images")
 plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
 plt.show()
+
+
+def weights_init(m):
+    """Initializes weights based on classname of m."""
+    classname = m.__class__.__name__
+    if classname.find("Conv") != -1:
+        m.weight.data.normal_(0.0, 0.02)
+    elif classname.find("BatchNorm") != -1:
+        m.weight.data.normal_(1.0, 0.02)
+        m.bias.data.fill_(0)
