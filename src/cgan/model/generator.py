@@ -30,10 +30,10 @@ class Generator(nn.Module):
 
     def forward(self, noise, labels):
         """
-        Takes a list of noise images with labels and returns generated images 
-        :param noise: Tensor representation of n images. Shape: (n, sqrt(n_pixels), sqrt(n_pixels))
+        Takes a list of noise images with labels and returns generated images.
+        :param noise: Noise vectors to build images from. Shape: (n, sqrt(n_pixels_in), sqrt(n_pixels_in))
         :param labels: Labels belonging to the images. Shape: (n)
-        :return: Probability of each image being real. Shape: (n)
+        :return: Generated images. Shape: (n, sqrt(n_pixels_out), sqrt(n_pixels_out))
         """
         n_images = noise.size(0)  # Noise is 3 dimentions, the first of which is the number of noise images
         noise = noise.view(n_images, self.n_pixels_in)  # Turn the 2D noise "images" into a 1D list of numbers

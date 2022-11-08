@@ -25,7 +25,7 @@ class Discriminator(nn.Module):
         self.label_embedding = nn.Embedding(n_labels, n_labels)
 
         self.model = nn.Sequential(
-            *self.hidden_layer(n_pixels + n_labels, 1024),
+            *self.hidden_layer(n_pixels + n_labels, 1024), # f(*(a, b, c)) = f(a, b, c)
             *self.hidden_layer(1024, 512),
             *self.hidden_layer(512, 256),
             nn.Linear(256, 1),
@@ -33,7 +33,7 @@ class Discriminator(nn.Module):
         )
 
     @staticmethod
-    def hidden_layer(in_features: int, out_features: int):
+    def hidden_layer(in_features, out_features):
         negative_slope, dropout = 0.2, 0.3
         return (
             nn.Linear(in_features, out_features),  # Linear model xW + b (see lecture 1: linear regression)

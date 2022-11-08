@@ -6,7 +6,7 @@ from PIL import Image
 class FashionMNIST(Dataset):
     def __init__(self, data_path="training_data", transform=None):
         super().__init__()
-        self.dataset = torchvision.datasets.FashionMNIST(root=data_path, transform=transform)
+        self.dataset = torchvision.datasets.FashionMNIST(root=data_path, transform=transform, download=True)
         self.category_labels = self.dataset.classes
         self.image_categories = self.dataset.targets
         self.images = self.dataset.data
@@ -16,7 +16,7 @@ class FashionMNIST(Dataset):
         return len(self.dataset)
 
     def __getitem__(self, i):
-        image = Image.fromarray(self.images[i].detach().numpy())
+        image = self.images[i] # Image.fromarray(self.images[i].detach().numpy())
         label = self.category_labels[int(self.image_categories[i])]
 
         return image, label

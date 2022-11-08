@@ -1,1 +1,1 @@
-from cgan import CGAN
+from .main import CGAN
