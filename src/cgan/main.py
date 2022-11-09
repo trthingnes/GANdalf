@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 from torchvision.datasets import FashionMNIST
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from model import Generator, Discriminator
+from models import Generator, Discriminator
 
 # Add project to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
