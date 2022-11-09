@@ -54,7 +54,7 @@ def trainingLoop(discriminator_, generator_):
             errD_real = BCELoss(output, label)
             # Calculate gradients for D in backward pass
             errD_real.backward()
-            D_x = output.mean().item()
+            D_real_output = output.mean().item()
 
             # (2) Update the discriminator with fake data
             # Generate batch of latent vectors
@@ -99,7 +99,7 @@ def trainingLoop(discriminator_, generator_):
                         len(dataloader),
                         errD.item(),
                         errG.item(),
-                        D_x,
+                        D_real_output,
                         D_G_z1,
                         D_G_z2,
                     )
