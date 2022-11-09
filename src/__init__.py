@@ -1,1 +1,1 @@
-from util import get_device, save_model, load_model
+from util import get_device, save_state, load_state

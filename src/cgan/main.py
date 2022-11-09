@@ -1,6 +1,6 @@
 import os
 import sys
-import time
+import datetime
 import torch
 import numpy as np
 import torch.nn as nn
@@ -13,7 +13,7 @@ from model import Generator, Discriminator
 
 # Add project to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from util import get_device, save_model
+from util import get_device, save_state
 
 
 class CGAN:
@@ -127,9 +127,9 @@ class CGAN:
             )
 
         print("Saving models...")
-        timestamp = time.ctime().replace(" ", "-")
-        save_model(self.generator, f"generator_{timestamp}")
-        save_model(self.discriminator, f"discriminator_{timestamp}")
+        timestamp = str(datetime.datetime.utcnow()).replace(" ", "-")
+        save_state(self.generator, f"generator_{timestamp}")
+        save_state(self.discriminator, f"discriminator_{timestamp}")
 
 
 CGAN().train()

@@ -8,20 +8,7 @@ class Discriminator(nn.Module):
         self.n_pixels = n_pixels
         self.n_labels = n_labels
 
-        # From what I can gather, this is an overcomplicated way of making dummy variables.
-        # The dataset of the code where we saw this has a number 0-9 as the first column.
-        # What this embedding does is basically the same as making dummy variables [0,...,1]. Shape: (10).
-        # The output from this seems random, but is the same if the input is the same.
-        # I assume it therefore works since the model can consider these numbers instead of [0,...,1].
-        # >>> le = nn.Embedding(3, 3)
-        # >>> le(torch.tensor([0,0,1,1,2,2]))
-        # tensor([[-0.9402, -1.5847, -0.3980], These are the same...
-        #         [-0.9402, -1.5847, -0.3980],  ^
-        #         [ 1.3810, -0.2916, -2.3109], these too...
-        #         [ 1.3810, -0.2916, -2.3109],  ^
-        #         [ 0.2044,  1.9303, -0.9796], and these
-        #         [ 0.2044,  1.9303, -0.9796]]) ^
-        # Question: Is this really the best way to do this?
+        # A nice rule could be the second number is half the first one.
         self.label_embedding = nn.Embedding(n_labels, n_labels)
 
         self.model = nn.Sequential(
