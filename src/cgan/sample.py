@@ -1,11 +1,12 @@
 import os
 import sys
-import torch
-import numpy as np
+
 import matplotlib.pyplot as plt
-from torchvision.datasets import FashionMNIST
-from mpl_toolkits.axes_grid1 import ImageGrid
+import numpy as np
+import torch
 from model import Generator
+from mpl_toolkits.axes_grid1 import ImageGrid
+from torchvision.datasets import FashionMNIST
 
 # Add project to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

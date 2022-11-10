@@ -11,3 +11,4 @@ jobs:
         with:
           src: "./src"
           options: "--check --verbose"
+      - uses: isort/isort-action@v1.0.0

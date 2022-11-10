@@ -1,15 +1,16 @@
+import datetime
 import os
 import sys
-import datetime
-import torch
+
 import numpy as np
+import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from torchvision.datasets import FashionMNIST
+from model import Discriminator, Generator
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from model import Generator, Discriminator
+from torchvision.datasets import FashionMNIST
 
 # Add project to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
