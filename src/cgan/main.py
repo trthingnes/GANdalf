@@ -20,11 +20,11 @@ from util import get_device, save_state
 class CGAN:
     def __init__(
         self,
-        n_epochs=30,
+        n_epochs=5,
         lr=1e-4,
         seed=42,
         batch_size=32,
-        noise_size=100,
+        noise_size=10,
         allow_cuda=True,
     ):
         self.n_epochs = n_epochs
@@ -50,7 +50,8 @@ class CGAN:
 
         # Define models
         self.noise_size = noise_size
-        self.generator = Generator(n_pixels_in=noise_size).to(self.device)
+        self.n_noise_pixels = noise_size ** 2
+        self.generator = Generator(img_size_in=noise_size).to(self.device)
         self.discriminator = Discriminator().to(self.device)
 
         # Define optimizers and loss function
@@ -61,9 +62,9 @@ class CGAN:
 
     def score_generated_images(self):
         """Generates a batch of images and gets them scored by the discriminator."""
-        noise = Variable(torch.randn(self.batch_size, self.noise_size)).to(
+        noise = Variable(torch.randn(self.batch_size, self.n_noise_pixels)).to(
             self.device
-        )  # Question: Variable?
+        )
         labels_g = Variable(
             torch.LongTensor(np.random.randint(0, self.n_labels, self.batch_size))
         ).to(self.device)

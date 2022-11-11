@@ -1,34 +1,35 @@
-import math
-
 import torch
 import torch.nn as nn
 
 
 class Generator(nn.Module):
-    def __init__(self, n_pixels_in=100, n_pixels_out=784, n_labels=10):
+    def __init__(self, img_size_in=10, img_size_out=28, n_labels=10, kernel_size=3):
         super().__init__()
-        self.n_pixels_in = n_pixels_in
-        self.n_pixels_out = n_pixels_out
+        self.img_size_in = img_size_in
+        self.img_size_out = img_size_out
+        self.img_pixels_in = img_size_in ** 2
+        self.img_pixels_out = img_size_out ** 2
+        self.kernel_size = kernel_size
         self.n_labels = n_labels
 
-        self.label_embedding = nn.Embedding(n_labels, n_labels)
+        self.label_embedding = nn.Embedding(self.n_labels, self.img_pixels_in)
 
         self.model = nn.Sequential(
-            *self.hidden_layer(100 + n_labels, 256),
-            *self.hidden_layer(256, 512),
-            *self.hidden_layer(512, 1024),
-            nn.Linear(1024, n_pixels_out),
+            # f(*(a, b, c)) = f(a, b, c)
+            *self.hidden_layer(100 + self.img_pixels_in, 512, self.kernel_size),
+            *self.hidden_layer(512, 1024, self.kernel_size),
+            *self.hidden_layer(1024, 2048, self.kernel_size),
+            nn.Conv2d(2048, self.img_pixels_out, self.kernel_size),
             nn.Tanh()
         )
 
     @staticmethod
-    def hidden_layer(in_features: int, out_features: int):
+    def hidden_layer(in_features, out_features, kernel_size):
         negative_slope = 0.2
         return (
-            # TODO: Change to Conv2D
-            nn.Linear(
-                in_features, out_features
-            ),  # Linear model xW + b (see lecture 1: linear regression)
+            nn.Conv2d(
+                in_features, out_features, kernel_size
+            ),  # Convolutional layer: (see lecture 3: CNN)
             nn.LeakyReLU(
                 negative_slope, inplace=True
             ),  # Negative values get shrinked, see docs.
@@ -41,24 +42,18 @@ class Generator(nn.Module):
         :param labels: Labels belonging to the images. Shape: (n)
         :return: Generated images. Shape: (n, sqrt(n_pixels_out), sqrt(n_pixels_out))
         """
-        n_images = noise.size(
-            0
-        )  # Noise is 3 dimentions, the first of which is the number of noise images
-        # TODO: Make this stay a 2D image.
-        noise = noise.view(
-            n_images, self.n_pixels_in
-        )  # Turn the 2D noise "images" into a 1D list of numbers
-        # TODO: Reshape this to be 2D output.
-        label_dummies = self.label_embedding(
-            labels
-        )  # Get the "dummy" values for the label value
+        n_images = noise.size(0)  # The first dimention of the tensor is the number of images.
+
+        noise = noise.view(n_images, self.img_size_in, self.img_size_in)  # Reshape the noise to be a 2D "picture"
+
+        # This embedding has the same shape as the input noise. Question: What other options do we have?
+        # Reshape the label embedding to be a 2D "picture"
+        label_embedding = self.label_embedding(labels).view(n_images, self.img_size_in, self.img_size_in)
 
         images = torch.cat(
-            [noise, label_dummies], 1
-        )  # Add the label data to each image
-        size = int(
-            math.sqrt(self.n_pixels_out)
-        )  # The width and height of the image is the square root of n_pixels_out
+            [noise, label_embedding], 1
+        )  # Add the label embedding to each image [Image|Embedding].
+
         return self.model(images).view(
-            images.size(0), size, size
+            n_images, self.img_size_out, self.img_size_out
         )  # Return a 3D list of images.

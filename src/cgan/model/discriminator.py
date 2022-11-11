@@ -3,29 +3,34 @@ import torch.nn as nn
 
 
 class Discriminator(nn.Module):
-    def __init__(self, n_pixels=784, n_labels=10):
+    def __init__(self, size=28, n_labels=10, kernel_size=3):
         super().__init__()
-        self.n_pixels = n_pixels
+        self.size = size
+        self.n_pixels = size ** 2
         self.n_labels = n_labels
+        self.kernel_size = kernel_size
 
         # A nice rule could be the second number is half the first one.
-        self.label_embedding = nn.Embedding(n_labels, n_labels)
+        # Question: Can this embedding layer be different from the generators?
+        self.embedding_size = int(0.5 * self.n_labels)
+        self.label_embedding = nn.Embedding(self.n_labels, self.embedding_size)
 
         self.model = nn.Sequential(
-            *self.hidden_layer(n_pixels + n_labels, 1024),  # f(*(a, b, c)) = f(a, b, c)
-            *self.hidden_layer(1024, 512),
-            *self.hidden_layer(512, 256),
-            nn.Linear(256, 1),
+            # f(*(a, b, c)) = f(a, b, c)
+            *self.hidden_layer(self.n_pixels + self.embedding_size, 1024, self.kernel_size),
+            *self.hidden_layer(1024, 512, self.kernel_size),
+            *self.hidden_layer(512, 256, self.kernel_size),
+            nn.Conv2d(256, 1, self.kernel_size),
             nn.Sigmoid()
         )
 
     @staticmethod
-    def hidden_layer(in_features, out_features):
+    def hidden_layer(in_features, out_features, kernel_size):
         negative_slope, dropout = 0.2, 0.3
         return (
-            nn.Linear(
-                in_features, out_features
-            ),  # Linear model xW + b (see lecture 1: linear regression)
+            nn.Conv2d(
+                in_features, out_features, kernel_size
+            ),  # 2D Convolutional layer: (see lecture 3: CNN)
             nn.LeakyReLU(
                 negative_slope, inplace=True
             ),  # Negative values get shrinked, see docs.
