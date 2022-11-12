@@ -65,6 +65,7 @@ class GAN:
         self.REAL_LABEL = REAL_LABEL
         self.FAKE_LABEL = FAKE_LABEL
         self.Z_DIM = Z_DIM
+        self.BATCH_SIZE = BATCH_SIZE
 
 
 
@@ -78,7 +79,17 @@ class GAN:
             m.bias.data.fill_(0)
         
 
-    
+    def step_discriminator(self):
+        self.discriminator.zero_grad()
+        real_cpu = data[0].to(self.device)
+
+        label = torch.full((self.BATCH_SIZE,), self.REAL_LABEL, dtype=torch.float, device=self.device)
+        output = self.discriminator(re)
+
+
+    def step_generator():
+        print("Generator")
+
     def trainingLoop(self):
         for epoch in range(self.n_epochs):
             for i, data in enumerate(self.dataloader, 0):
@@ -87,8 +98,7 @@ class GAN:
                 self.discriminator.zero_grad()
                 # Format batch
                 real_cpu = data[0].to(self.device)
-                b_size = real_cpu.size(0)
-                label = torch.full((b_size,), self.REAL_LABEL, dtype=torch.float, device=self.device)
+                label = torch.full((self.BATCH_SIZE,), self.REAL_LABEL, dtype=torch.float, device=self.device)
                 # Forward pass real batch through D
                 output = self.discriminator(real_cpu).view(-1)
                 # Calculate loss on all-real batch
@@ -99,7 +109,7 @@ class GAN:
 
                 # (2) Update the discriminator with fake data
                 # Generate batch of latent vectors
-                noise = torch.randn(b_size, self.Z_DIM, 1, 1, device=self.device)
+                noise = torch.randn(self.BATCH_SIZE, self.Z_DIM, 1, 1, device=self.device)
                 # Generate fake image batch with G
                 fake = self.generator(noise)
                 label.fill_(self.FAKE_LABEL)
