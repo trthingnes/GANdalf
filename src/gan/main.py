@@ -30,7 +30,7 @@ class GAN:
         G_HIDDEN = 64,
         X_DIM = 64,
         D_HIDDEN = 64,
-        n_epochs = 1,
+        n_epochs = 6,
         REAL_LABEL = 1,
         FAKE_LABEL = 0,
         lr = 2e-4,
@@ -78,6 +78,7 @@ class GAN:
             m.bias.data.fill_(0)
         
 
+    
     def trainingLoop(self):
         for epoch in range(self.n_epochs):
             for i, data in enumerate(self.dataloader, 0):
