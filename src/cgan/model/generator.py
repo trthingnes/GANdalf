@@ -16,59 +16,48 @@ class Generator(nn.Module):
         self.label_embedding = nn.Embedding(self.n_labels, int(0.5 * self.n_labels))
 
         self.model = nn.Sequential(
-            # f(*(a, b, c)) is the same as f(a, b, c)
-            # TODO: Insert a single linear layer first to account for the label embedding
-            *self.hidden_layer(100 + self.img_pixels_in, 512, self.kernel_size),
+            # f(*(a, b, c)) equals f(a, b, c)
+            *self.first_layer(
+                self.img_pixels_in + self.embedding_size, self.img_pixels_in
+            ),
+            *self.hidden_layer(self.img_pixels_in, 512, self.kernel_size),
             *self.hidden_layer(512, 1024, self.kernel_size),
             *self.hidden_layer(1024, 2048, self.kernel_size),
-            nn.Conv2d(2048, self.img_pixels_out, self.kernel_size),
-            nn.Tanh()
+            *self.last_layer(2048, self.img_pixels_out, self.kernel_size),
         )
 
     @staticmethod
     def first_layer(in_features, out_features):
+        negative_slope = 0.2
         return (
-            nn.Linear(in_features, out_features)
-            # TODO: Make the first linear layer.
+            # Dense layer xW + b (see lecture 1: linear regression)
+            nn.Linear(in_features, out_features),
+            nn.LeakyReLU(negative_slope, inplace=True),
         )
 
     @staticmethod
     def hidden_layer(in_features, out_features, kernel_size):
         negative_slope = 0.2
         return (
-            nn.Conv2d(
-                in_features, out_features, kernel_size
-            ),  # Convolutional layer: (see lecture 3: CNN)
-            nn.LeakyReLU(
-                negative_slope, inplace=True
-            ),  # Negative values get shrinked, see docs.
+            # Convolutional layer (see lecture 3: CNN)
+            nn.Conv2d(in_features, out_features, kernel_size),
+            # LeakyReLU is like ReLU but negative values get shrunk, not removed.
+            nn.LeakyReLU(negative_slope, inplace=True),
         )
+
+    @staticmethod
+    def last_layer(in_features, out_features, kernel_size):
+        return nn.Conv2d(in_features, out_features, kernel_size), nn.Tanh()
 
     def forward(self, noise, labels):
-        """
-        Takes a list of noise images with labels and returns generated images.
-        :param noise: Noise vectors to build images from. Shape: (n, sqrt(n_pixels_in), sqrt(n_pixels_in))
-        :param labels: Labels belonging to the images. Shape: (n)
-        :return: Generated images. Shape: (n, sqrt(n_pixels_out), sqrt(n_pixels_out))
-        """
-        n_images = noise.size(
-            0
-        )  # The first dimension of the tensor is the number of images.
+        """Takes a list of noise images with labels and returns generated images."""
+        n_images = noise.size(0)
 
-        noise = noise.view(
-            n_images, self.img_size_in, self.img_size_in
-        )  # Reshape the noise to be a 2D "picture"
+        # Reshape the noise to be single strip of pixels
+        noise = noise.view(n_images, self.img_pixels_in)
 
-        # This embedding has the same shape as the input noise. Question: What other options do we have?
-        # Reshape the label embedding to be a 2D "picture"
-        label_embedding = self.label_embedding(labels).view(
-            n_images, self.img_size_in, self.img_size_in
-        )
+        # Add the label embedding to each image [Image|Embedding]
+        images = torch.cat([noise, self.label_embedding(labels)], 1)
 
-        images = torch.cat(
-            [noise, label_embedding], 1
-        )  # Add the label embedding to each image [Image|Embedding].
-
-        return self.model(images).view(
-            n_images, self.img_size_out, self.img_size_out
-        )  # Return a 3D list of images.
+        # Reshape the strip of pixels into a 2D image
+        return self.model(images).view(n_images, self.img_size_out, self.img_size_out)

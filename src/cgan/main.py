@@ -39,14 +39,16 @@ class CGAN:
 
         # Generator and discriminator models
         self.generator = Generator(
-            self.noise_size,
-            self.dataset.img_size,
-            self.dataset.n_labels,
-            self.kernel_size,
+            img_size_in=self.noise_size,
+            img_size_out=self.dataset.img_size,
+            n_labels=self.dataset.n_labels,
+            kernel_size=self.kernel_size,
         ).to(self.device)
 
         self.discriminator = Discriminator(
-            self.dataset.img_size, self.dataset.n_labels, self.kernel_size
+            img_size_in=self.dataset.img_size,
+            n_labels=self.dataset.n_labels,
+            kernel_size=self.kernel_size,
         ).to(self.device)
 
         # Loss function and optimizers
