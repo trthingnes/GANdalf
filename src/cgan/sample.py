@@ -1,15 +1,9 @@
-import os
-import sys
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from model import Generator
 from mpl_toolkits.axes_grid1 import ImageGrid
 from torchvision.datasets import FashionMNIST
-
-# Add project to path to allow imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from util import load_state
 
 generator = load_state(Generator(), "generator_2022-11-09-11:34:11.801048")

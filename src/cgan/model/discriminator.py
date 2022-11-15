@@ -3,10 +3,10 @@ import torch.nn as nn
 
 
 class Discriminator(nn.Module):
-    def __init__(self, size=28, n_labels=10, kernel_size=3):
+    def __init__(self, img_size_in, n_labels, kernel_size):
         super().__init__()
-        self.size = size
-        self.n_pixels = size ** 2
+        self.size = img_size_in
+        self.n_pixels = img_size_in**2
         self.n_labels = n_labels
         self.kernel_size = kernel_size
 
@@ -17,7 +17,9 @@ class Discriminator(nn.Module):
 
         self.model = nn.Sequential(
             # f(*(a, b, c)) = f(a, b, c)
-            *self.hidden_layer(self.n_pixels + self.embedding_size, 1024, self.kernel_size),
+            *self.hidden_layer(
+                self.n_pixels + self.embedding_size, 1024, self.kernel_size
+            ),
             *self.hidden_layer(1024, 512, self.kernel_size),
             *self.hidden_layer(512, 256, self.kernel_size),
             nn.Conv2d(256, 1, self.kernel_size),
