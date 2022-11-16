@@ -1,5 +1,5 @@
-import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import torchvision.transforms as transforms
 
 
 class FashionMNIST(datasets.FashionMNIST):

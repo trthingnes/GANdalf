@@ -3,13 +3,12 @@ import datetime
 import numpy as np
 import torch
 import torch.nn as nn
+from dataset import FashionMNIST
 from model import Discriminator, Generator
 from torch.autograd import Variable
 from torch.optim import Adam
 from torch.utils.data import DataLoader
-
 from util import get_device, save_state
-from dataset import FashionMNIST
 
 
 class CGAN:
