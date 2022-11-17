@@ -92,7 +92,6 @@ class CGAN:
         # Compare to all being scored as real because this is the goal of the generator
         loss = self.loss(self.score_generated_images(), self.all_real_score)
 
-        # Question: How does the optimizer get the loss score? Does it happen under the hood?
         loss.backward()
         self.optim_g.step()
 
@@ -123,7 +122,6 @@ class CGAN:
 
     def train(self):
         loss_g = loss_d = 0
-
         for epoch in range(self.n_epochs):
             for (real_images, real_labels) in self.dataloader:
                 real_images = Variable(real_images).to(self.device)
