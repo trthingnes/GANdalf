@@ -8,7 +8,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from cdcgan import Discriminator, Generator
-from dataset import MNIST, FashionMNIST
+from dataset import FashionMNIST
 from util import get_device, save_state
 
 
@@ -141,4 +141,4 @@ class CDCGAN:
         save_state(self.discriminator, f"discriminator_{timestamp}")
 
 
-CDCGAN(dataset=MNIST()).train()
+CDCGAN().train()
