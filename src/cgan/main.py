@@ -13,9 +13,8 @@ from util import get_device, save_state
 class CGAN:
     def __init__(
         self,
-        n_epochs=5,
+        n_epochs=30,
         lr=1e-4,
-        kernel_size=3,
         batch_size=32,
         allow_cuda=True,
         seed=42,
@@ -23,7 +22,6 @@ class CGAN:
         # Parameters
         self.n_epochs = n_epochs
         self.lr_g = self.lr_d = lr
-        self.kernel_size = kernel_size
         self.batch_size = batch_size
         self.device = get_device(allow_cuda, seed)
 
@@ -122,7 +120,7 @@ class CGAN:
 
     def train(self):
         loss_g = loss_d = 0
-        for epoch in range(self.n_epochs):
+        for epoch in range(1, self.n_epochs + 1):
             for (real_images, real_labels) in self.dataloader:
                 real_images = Variable(real_images).to(self.device)
                 real_labels = Variable(real_labels).to(self.device)
