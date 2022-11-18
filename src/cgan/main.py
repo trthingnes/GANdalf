@@ -104,6 +104,8 @@ class CGAN:
         real_loss = self.loss(
             self.discriminator(real_images, real_labels), self.all_real_score
         )
+        
+        # print(real_loss)
 
         # Check how the discriminator rates generated images
         # Compare to all being scored as fake since this is the goal of the discriminator
