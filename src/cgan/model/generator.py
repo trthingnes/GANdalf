@@ -32,7 +32,7 @@ class Generator(nn.Module):
             nn.ReLU(inplace=True)
         )
 
-        self.output_layer = nn.Conv2d(16, 1, kernel_size=(7, 7))
+        self.output_layer = nn.Sequential(nn.Conv2d(16, 1, kernel_size=(7, 7)), nn.Sigmoid())
 
     def apply_noise_layer(self, n_images, noise):
         """Reshape the noise into several channels."""
