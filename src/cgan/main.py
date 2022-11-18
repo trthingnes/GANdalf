@@ -10,7 +10,6 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from util import get_device, save_state
 
-
 class CGAN:
     def __init__(
         self,
@@ -41,13 +40,11 @@ class CGAN:
             img_size_in=self.noise_size,
             img_size_out=self.dataset.img_size,
             n_labels=self.dataset.n_labels,
-            kernel_size=self.kernel_size,
         ).to(self.device)
 
         self.discriminator = Discriminator(
             img_size_in=self.dataset.img_size,
             n_labels=self.dataset.n_labels,
-            kernel_size=self.kernel_size,
         ).to(self.device)
 
         # Loss function and optimizers
@@ -90,7 +87,8 @@ class CGAN:
 
         # Check how the discriminator rates generated images
         # Compare to all being scored as real because this is the goal of the generator
-        loss = self.loss(self.score_generated_images(), self.all_real_score)
+        score = self.score_generated_images()
+        loss = self.loss(score, self.all_real_score)
 
         loss.backward()
         self.optim_g.step()

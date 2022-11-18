@@ -3,19 +3,17 @@ import torch.nn as nn
 
 
 class Generator(nn.Module):
-    def __init__(self, img_size_in, img_size_out, n_labels, kernel_size):
+    def __init__(self, img_size_in, img_size_out, n_labels):
         super().__init__()
         self.img_size_in = img_size_in
         self.img_size_out = img_size_out
         self.img_pixels_in = img_size_in**2
         self.img_pixels_out = img_size_out**2
         self.n_labels = n_labels
-        self.kernel_size = kernel_size
-        
-        self.negative_slope = 0.2
         self.embedding_size = 10
+        self.negative_slope = 0.2
 
-        self.label_embedding = nn.Embedding(self.n_labels, self.embedding_size)
+        print(self.img_size_out)
 
         self.noise_layer = nn.Sequential(
             # Dense layer xW + b (see lecture 1: linear regression)
@@ -23,41 +21,38 @@ class Generator(nn.Module):
             # LeakyReLU is like ReLU but negative values get shrunk, not removed
             nn.LeakyReLU(self.negative_slope, inplace=True)
         )
-
+        
         self.label_layer = nn.Sequential(
             # Embedding layer takes a label number 0-n and returns an array of numbers
             nn.Embedding(self.n_labels, self.embedding_size),
-            nn.Linear(self.embedding_size, self.img_pixels_out/16),
+            nn.Linear(self.embedding_size, int(self.img_pixels_out/16)),
+            nn.LeakyReLU(self.negative_slope, inplace=True)
+        )
+        
+        self.hidden_layer1 = nn.Sequential(
+            nn.ConvTranspose2d(17, 16, stride=(2, 2), kernel_size=(4, 4)),
             nn.LeakyReLU(self.negative_slope, inplace=True)
         )
 
-    def apply_noise_layer(self, n_images, noise):
-        """Reshape and apply the noise layer to the noise data."""
+        self.hidden_layer2 = nn.Sequential(
+            nn.ConvTranspose2d(16, 16, stride=(2, 2), kernel_size=(4, 4)),
+            nn.LeakyReLU(self.negative_slope, inplace=True)
+        )
 
+        self.output_layer = nn.Sequential(
+            nn.Conv2d(16, 1, kernel_size=(7, 7)),
+            nn.Tanh()
+        )
+
+    def apply_noise_layer(self, n_images, noise):
+        """Reshape the noise into several channels."""
         # Reshape the noise to be single strip of pixels
         noise = noise.view(n_images, self.img_pixels_in)
 
         # Apply the layer to the data
         noise = self.noise_layer(noise)
 
-        return noise.view(n_images, self.img_pixels_out/(7*7), 7, 7)
-        
-    def apply_label_layer(self, n_images, labels):
-        """Apply the label layer to the label data."""
-        return self.label_layer(labels).view(n_images, 7, 7)
-
-    def apply_hidden_layer(self, n_images, images, in_channels, out_channels):
-        # Stride = (2, 2)
-        # Kernel size = (4, 4)
-        pass
-
-    def apply_output_layer(self, n_images, images, in_channels):
-        pass
-
-    @staticmethod
-    def last_layer(in_features, out_features, kernel_size):
-        # TODO: In channels here too.
-        return nn.Conv2d(in_features, out_features, kernel_size), nn.Tanh()
+        return noise.view(n_images, int(self.img_pixels_out/(7*7)), 7, 7)
 
     def forward(self, noise, labels):
         """Takes a list of noise images with labels and returns generated images."""
@@ -65,14 +60,14 @@ class Generator(nn.Module):
 
         # Apply initial dense (linear) layers
         noise = self.apply_noise_layer(n_images, noise)
-        labels = self.apply_label_layer(n_images, labels)
+        labels = self.label_layer(labels).view(n_images, 1, 7, 7)
 
-        # Combine noise channels with label channel (16 noise channels + 1 label channels = 17 total)
-        images = [torch.cat([noise[i], labels[i]]) for i in range(n_images)]   
+        # Combine noise channels with label channel (16 noise channels + 1 label channel = 17 total)
+        images = torch.cat([noise, labels], dim=1)
         
         # Apply hidden layers
-        images = self.apply_hidden_layer(n_images, images, 17, 16)
-        images = self.apply_hidden_layer(n_images, images, 16, 16)
+        images = self.hidden_layer1(images)  # Input: 7x7, output: 14x14
+        images = self.hidden_layer2(images)  # Input: 14x14, output: 28x28
 
         # Collapse channels into single channel images
-        return self.apply_output_layer(n_images, images, 16)
+        return self.output_layer(images)

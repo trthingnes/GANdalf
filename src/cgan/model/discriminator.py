@@ -3,63 +3,52 @@ import torch.nn as nn
 
 
 class Discriminator(nn.Module):
-    def __init__(self, img_size_in, n_labels, kernel_size):
+    def __init__(self, img_size_in, n_labels):
         super().__init__()
         self.img_size_in = img_size_in
         self.img_pixels_in = img_size_in**2
         self.n_labels = n_labels
-        self.kernel_size = kernel_size
 
         # A nice rule could be the second number is half the first one.
-        self.embedding_size = int(0.5 * self.n_labels)
-        self.label_embedding = nn.Embedding(self.n_labels, self.embedding_size)
+        self.embedding_size = 10
+        self.negative_slope = 0.2
 
-        self.model = nn.Sequential(
-            # f(*(a, b, c)) equals f(a, b, c)
-            *self.first_layer(
-                self.img_pixels_in + self.embedding_size, self.img_pixels_in
-            ),
-            *self.hidden_layer(self.img_pixels_in, 1024, self.kernel_size),
-            *self.hidden_layer(1024, 512, self.kernel_size),
-            *self.hidden_layer(512, 256, self.kernel_size),
-            *self.last_layer(256, 1, self.kernel_size),
+        # Make a label channel that can be combined with the noise.
+        self.label_layer = nn.Sequential(
+            # Embedding layer takes a label number 0-n and returns an array of numbers
+            nn.Embedding(self.n_labels, self.embedding_size),
+            nn.Linear(self.embedding_size, self.img_pixels_in),
         )
 
-    @staticmethod
-    def first_layer(in_features, out_features):
-        negative_slope, dropout = 0.2, 0.3
-        return (
-            # Dense layer xW + b (see lecture 1: linear regression)
-            nn.Linear(in_features, out_features),
-            nn.LeakyReLU(negative_slope, inplace=True),
-            nn.Dropout(dropout),
+        self.hidden_layer1 = nn.Sequential(
+            nn.Conv2d(2, 64, stride=(2, 2), kernel_size=(3, 3)),
+            nn.LeakyReLU(self.negative_slope, inplace=True)
         )
 
-    @staticmethod
-    def hidden_layer(in_features, out_features, kernel_size):
-        negative_slope, dropout = 0.2, 0.3
-        return (
-            # 2D Convolutional layer (see lecture 3: CNN)
-            nn.Conv2d(in_features, out_features, kernel_size),
-            # LeakyReLU is like ReLU but negative values get shrunk, not removed.
-            nn.LeakyReLU(negative_slope, inplace=True),
-            # Dropout is useful for avoiding over-fitting (see lecture 3: CNN)
-            nn.Dropout(dropout),
+        self.hidden_layer2 = nn.Sequential(
+            nn.Conv2d(64, 128, stride=(2, 2), kernel_size=(3, 3)),
+            nn.LeakyReLU(self.negative_slope, inplace=True)
         )
 
-    @staticmethod
-    def last_layer(in_features, out_features, kernel_size):
-        return nn.Conv2d(in_features, out_features, kernel_size), nn.Sigmoid()
+        # Collapse channels into single image.
+        self.output_layer = nn.Sequential(
+            nn.MaxPool2d(kernel_size=(3, 3), stride=(2, 2)),  # Input 7x7, output 3x3
+            nn.Flatten(),  # Flatten channels
+            nn.Dropout(p=0.2),
+            nn.Linear(512, 1),
+            nn.ReLU(inplace=True)
+        )
 
     def forward(self, images, labels):
         """Takes a list of images with labels and returns the probability of them being real."""
-        n_images = images.img_size_in(0)
+        n_images = images.size(0)
 
-        # Turn the 2D images into a 1D list of numbers
-        images = images.view(n_images, self.img_pixels_in)
+        labels = self.label_layer(labels).view(n_images, 1, self.img_size_in, self.img_size_in)
 
-        # Add the label embedding to the images array before inputting into the model.
-        images = torch.cat([images, self.label_embedding(labels)], 1)
+        # Combine noise channels with label channel (1 image channel + 1 label channel = 2 total)
+        images = torch.cat([images, labels], dim=1) 
 
-        # Squeeze remove all single element dimensions.
-        return self.model(images).squeeze()
+        images = self.hidden_layer1(images)  # Input: 28x28, output: 14x14
+        images = self.hidden_layer2(images)  # Input: 14x14, output 7x7
+
+        return self.output_layer(images).squeeze()
