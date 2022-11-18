@@ -7,7 +7,7 @@ class Discriminator(nn.Module):
         super().__init__()
         self.img_size_in = img_size_in
         self.img_pixels_in = img_size_in**2
-        self.n_labels = n_labels 
+        self.n_labels = n_labels
 
         # A nice rule could be the second number is half the first one.
         self.embedding_size = 10
@@ -22,7 +22,7 @@ class Discriminator(nn.Module):
 
         self.hidden_layer1 = nn.Sequential(
             nn.Conv2d(2, 64, stride=(2, 2), kernel_size=(2, 2)),
-            nn.LeakyReLU(self.negative_slope, inplace=True)
+            nn.LeakyReLU(self.negative_slope, inplace=True),
         )
 
         self.hidden_layer2 = nn.Sequential(
@@ -36,17 +36,19 @@ class Discriminator(nn.Module):
             nn.Flatten(),  # Flatten channels
             nn.Dropout(p=0.2),
             nn.Linear(1152, 1),
-            nn.Sigmoid()
+            nn.Sigmoid(),
         )
 
     def forward(self, images, labels):
         """Takes a list of images with labels and returns the probability of them being real."""
         n_images = images.size(0)
 
-        labels = self.label_layer(labels).view(n_images, 1, self.img_size_in, self.img_size_in)
+        labels = self.label_layer(labels).view(
+            n_images, 1, self.img_size_in, self.img_size_in
+        )
 
         # Combine noise channels with label channel (1 image channel + 1 label channel = 2 total)
-        images = torch.cat([images, labels], dim=1) 
+        images = torch.cat([images, labels], dim=1)
         images = self.hidden_layer1(images)  # Input: 28x28, output: 14x14
         images = self.hidden_layer2(images)  # Input: 14x14, output 7x7
         output = self.output_layer(images).squeeze()

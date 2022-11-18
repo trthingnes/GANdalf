@@ -3,14 +3,16 @@ import datetime
 import numpy as np
 import torch
 import torch.nn as nn
-from dataset import FashionMNIST, MNIST
-from model import Discriminator, Generator
 from torch.autograd import Variable
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+
+from cdcgan import Discriminator, Generator
+from dataset import MNIST, FashionMNIST
 from util import get_device, save_state
 
-class CGAN:
+
+class CDCGAN:
     def __init__(
         self,
         n_epochs=30,
@@ -18,7 +20,7 @@ class CGAN:
         batch_size=32,
         allow_cuda=True,
         seed=42,
-        dataset=FashionMNIST()
+        dataset=FashionMNIST(),
     ):
         # Parameters
         self.n_epochs = n_epochs
@@ -139,4 +141,4 @@ class CGAN:
         save_state(self.discriminator, f"discriminator_{timestamp}")
 
 
-CGAN(dataset=MNIST()).train()
+CDCGAN(dataset=MNIST()).train()
