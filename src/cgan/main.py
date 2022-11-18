@@ -3,7 +3,7 @@ import datetime
 import numpy as np
 import torch
 import torch.nn as nn
-from dataset import FashionMNIST
+from dataset import FashionMNIST, MNIST
 from model import Discriminator, Generator
 from torch.autograd import Variable
 from torch.optim import Adam
@@ -18,6 +18,7 @@ class CGAN:
         batch_size=32,
         allow_cuda=True,
         seed=42,
+        dataset=FashionMNIST()
     ):
         # Parameters
         self.n_epochs = n_epochs
@@ -28,7 +29,7 @@ class CGAN:
         self.noise_size = 10
 
         # Dataset and dataloader
-        self.dataset = FashionMNIST()
+        self.dataset = dataset
         self.dataloader = DataLoader(
             self.dataset, batch_size=self.batch_size, shuffle=True
         )
@@ -102,8 +103,6 @@ class CGAN:
         real_loss = self.loss(
             self.discriminator(real_images, real_labels), self.all_real_score
         )
-        
-        # print(real_loss)
 
         # Check how the discriminator rates generated images
         # Compare to all being scored as fake since this is the goal of the discriminator
@@ -140,4 +139,4 @@ class CGAN:
         save_state(self.discriminator, f"discriminator_{timestamp}")
 
 
-CGAN().train()
+CGAN(dataset=MNIST()).train()

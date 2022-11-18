@@ -8,6 +8,7 @@ torch = "*"
 torchvision = "*"
 matplotlib = "*"
 numpy = "*"
+argparse = "*"
 
 [dev-packages]
 black = "*"
