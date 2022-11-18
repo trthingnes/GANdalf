@@ -7,9 +7,10 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from cgan import Discriminator, Generator
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
+
+from cgan import Discriminator, Generator
 from dataset import FashionMNIST
 
 # Add project to path to allow imports
@@ -53,7 +54,9 @@ class CGAN:
             self.device
         )  # Question: Variable?|
         labels_g = Variable(
-            torch.LongTensor(np.random.randint(0, self.dataset.n_labels, self.batch_size))
+            torch.LongTensor(
+                np.random.randint(0, self.dataset.n_labels, self.batch_size)
+            )
         ).to(self.device)
         images_g = self.generator(noise, labels_g)
 

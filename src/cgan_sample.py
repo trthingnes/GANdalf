@@ -3,8 +3,9 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from cgan import Generator
 from mpl_toolkits.axes_grid1 import ImageGrid
+
+from cgan import Generator
 from dataset import FashionMNIST
 from util import load_state
 
