@@ -12,5 +12,7 @@ def get_device(allow_cuda=True, seed=None):
             torch.cuda.manual_seed(seed)
     else:
         print("Using CPU")
+        if seed:
+            torch.manual_seed(seed)
 
     return torch.device("cuda:0" if use_cuda else "cpu")

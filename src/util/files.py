@@ -1,4 +1,5 @@
 import os
+
 import torch
 
 default_directory = "model_data"

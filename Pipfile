@@ -7,9 +7,12 @@ name = "pypi"
 torch = "*"
 torchvision = "*"
 matplotlib = "*"
+numpy = "*"
+argparse = "*"
 
 [dev-packages]
 black = "*"
+isort = "*"
 
 [requires]
 python_version = "3.10"
