@@ -15,7 +15,7 @@ from util import get_device, save_state
 class CDCGAN:
     def __init__(
         self,
-        n_epochs=30,
+        n_epochs=100000,
         lr=1e-4,
         batch_size=32,
         allow_cuda=True,
@@ -135,6 +135,12 @@ class CDCGAN:
                 f"Epoch {epoch} -> Generator loss: {loss_g}, Discriminator loss: {loss_d}"
             )
 
+            if epoch % (self.n_epochs // 10) == 0:
+                self.save_models()
+
+        self.save_models()
+
+    def save_models(self):
         print("Saving models...")
         timestamp = str(datetime.datetime.utcnow()).replace(" ", "-")
         save_state(self.generator, f"generator_{timestamp}")
