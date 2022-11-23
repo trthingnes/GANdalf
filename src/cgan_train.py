@@ -1,15 +1,17 @@
+import datetime
 import os
 import sys
-import datetime
-import torch
+
 import numpy as np
+import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision.transforms as transforms
-from torchvision.datasets import FashionMNIST
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
-from models import Generator, Discriminator
+
+from cgan import Discriminator, Generator
+from dataset import FashionMNIST
 
 # Add project to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -31,21 +33,9 @@ class CGAN:
         self.device = get_device(allow_cuda, seed)
 
         # Define dataset and dataloader
-        dataset = FashionMNIST(
-            root="training_data",
-            transform=transforms.Compose(
-                [
-                    transforms.ToTensor(),
-                    transforms.Normalize(
-                        mean=(0.5,), std=(0.5,)
-                    ),  # Question: Why do we do this?
-                ]
-            ),
-            download=True,
-        )
-        self.n_labels = len(dataset.classes)
+        self.dataset = FashionMNIST()
         self.batch_size = batch_size
-        self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        self.dataloader = DataLoader(self.dataset, batch_size=batch_size, shuffle=True)
 
         # Define models
         self.noise_size = noise_size
@@ -62,9 +52,11 @@ class CGAN:
         """Generates a batch of images and gets them scored by the discriminator."""
         noise = Variable(torch.randn(self.batch_size, self.noise_size)).to(
             self.device
-        )  # Question: Variable?
+        )  # Question: Variable?|
         labels_g = Variable(
-            torch.LongTensor(np.random.randint(0, self.n_labels, self.batch_size))
+            torch.LongTensor(
+                np.random.randint(0, self.dataset.n_labels, self.batch_size)
+            )
         ).to(self.device)
         images_g = self.generator(noise, labels_g)
 

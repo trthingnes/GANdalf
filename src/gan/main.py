@@ -12,8 +12,8 @@ import torchvision.utils as vutils
 import matplotlib.pyplot as plt
 
 from dataset import get_preprocessed_dataset
-from models.generator import Generator
-from models.discriminator import Discriminator
+from src.gan.generator import Generator
+from src.gan.discriminator import Discriminator
 # Add project to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from util import get_device, save_state

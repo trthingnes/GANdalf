@@ -1,1 +1,2 @@
-from .main import CGAN
+from .discriminator import Discriminator
+from .generator import Generator

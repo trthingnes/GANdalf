@@ -1,6 +1,7 @@
 # Data files
 training_data
 model_data
+runs
 
 # Mac OS related crap
 .DS_Store
