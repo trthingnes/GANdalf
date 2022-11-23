@@ -15,4 +15,4 @@ def get_device(allow_cuda=True, seed=None):
         if seed:
             torch.manual_seed(seed)
 
-    return torch.device("cuda:0" if use_cuda else "cpu")
+    return torch.device("cuda" if use_cuda else "cpu")
