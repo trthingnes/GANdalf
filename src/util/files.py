@@ -1,3 +1,4 @@
+import logging
 import os
 
 import torch
@@ -14,11 +15,11 @@ def save_state(model, name, directory=default_directory):
     if not os.path.exists(directory):
         os.mkdir(directory)
     torch.save(model.state_dict(), f"{directory}/{filename_format(name)}")
-    print(f"Saved file '{filename_format(name)}'")
+    logging.info(f"Saved file '{filename_format(name)}'")
 
 
 def load_state(model, name, directory=default_directory):
     """Reads a models state dict from the file with the given name and loads it in the model."""
     model.load_state_dict(torch.load(f"{directory}/{filename_format(name)}"))
-    print(f"Loaded file '{filename_format(name)}'")
+    logging.info(f"Loaded file '{filename_format(name)}'")
     return model

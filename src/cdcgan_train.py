@@ -1,5 +1,7 @@
-import datetime
 import argparse
+import datetime
+import logging
+import sys
 
 import numpy as np
 import torch
@@ -10,7 +12,7 @@ from torch.utils.data import DataLoader
 
 from cdcgan import Discriminator, Generator
 from dataset import FashionMNIST
-from util import get_device, get_device_count, save_state, load_state
+from util import get_device, get_device_count, load_state, save_state
 
 
 class CDCGAN:
@@ -30,16 +32,20 @@ class CDCGAN:
         )
 
         # Generator and discriminator models
-        self.generator = nn.DataParallel(Generator(
-            img_size_in=self.noise_size,
-            img_size_out=self.dataset.img_size,
-            n_labels=self.dataset.n_labels,
-        )).to(self.device)
+        self.generator = nn.DataParallel(
+            Generator(
+                img_size_in=self.noise_size,
+                img_size_out=self.dataset.img_size,
+                n_labels=self.dataset.n_labels,
+            )
+        ).to(self.device)
 
-        self.discriminator = nn.DataParallel(Discriminator(
-            img_size_in=self.dataset.img_size,
-            n_labels=self.dataset.n_labels,
-        )).to(self.device)
+        self.discriminator = nn.DataParallel(
+            Discriminator(
+                img_size_in=self.dataset.img_size,
+                n_labels=self.dataset.n_labels,
+            )
+        ).to(self.device)
 
         # Load state if we are continuing training existing data
         if continue_from_timestamp:
@@ -131,7 +137,7 @@ class CDCGAN:
                 loss_d = self.step_discriminator(real_images, real_labels)
                 self.discriminator.eval()
 
-            print(
+            logging.info(
                 f"Epoch {epoch} -> Generator loss: {loss_g}, Discriminator loss: {loss_d}"
             )
 
@@ -152,5 +158,11 @@ parser.add_argument(
 )
 opt = parser.parse_args()
 
+logging.basicConfig(
+    format="[%(levelname)s] %(asctime)s: %(message)s",
+    encoding="utf-8",
+    level=logging.DEBUG,
+    handlers=[logging.FileHandler("gandalf.log"), logging.StreamHandler(sys.stdout)],
+)
 
 CDCGAN(continue_from_timestamp=opt.timestamp).train()

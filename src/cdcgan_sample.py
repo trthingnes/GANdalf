@@ -3,12 +3,12 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+import torch.nn as nn
 from mpl_toolkits.axes_grid1 import ImageGrid
 from torchvision.datasets import FashionMNIST
 
 from cdcgan import Generator
 from util import load_state
-import torch.nn as nn
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
