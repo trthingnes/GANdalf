@@ -1,4 +1,5 @@
 import datetime
+import argparse
 
 import numpy as np
 import torch
@@ -9,17 +10,17 @@ from torch.utils.data import DataLoader
 
 from cdcgan import Discriminator, Generator
 from dataset import FashionMNIST
-from util import get_device, save_state, load_state
+from util import get_device, get_device_count, save_state, load_state
 
 
 class CDCGAN:
-    def __init__(self, continue_from=None):
+    def __init__(self, continue_from_timestamp=None):
         # Parameters
         self.device = get_device(allow_cuda=True, seed=42)
-        self.n_epochs = 1000
-        self.n_saves = 100
+        self.n_epochs = 100
+        self.n_saves = 10
         self.lr_g = self.lr_d = 1e-4
-        self.batch_size = 32
+        self.batch_size = 32 * get_device_count(cuda=(self.device.type == "cuda"))
         self.noise_size = 10
 
         # Dataset and dataloader
@@ -29,21 +30,21 @@ class CDCGAN:
         )
 
         # Generator and discriminator models
-        self.generator = Generator(
+        self.generator = nn.DataParallel(Generator(
             img_size_in=self.noise_size,
             img_size_out=self.dataset.img_size,
             n_labels=self.dataset.n_labels,
-        ).to(self.device)
+        )).to(self.device)
 
-        self.discriminator = Discriminator(
+        self.discriminator = nn.DataParallel(Discriminator(
             img_size_in=self.dataset.img_size,
             n_labels=self.dataset.n_labels,
-        ).to(self.device)
+        )).to(self.device)
 
         # Load state if we are continuing training existing data
-        if continue_from:
-            load_state(self.generator, f"generator_{continue_from}")
-            load_state(self.discriminator, f"discriminator_{continue_from}")
+        if continue_from_timestamp:
+            load_state(self.generator, f"generator_{continue_from_timestamp}")
+            load_state(self.discriminator, f"discriminator_{continue_from_timestamp}")
 
         # Loss function and optimizers
         self.loss = nn.BCELoss()
@@ -51,8 +52,8 @@ class CDCGAN:
         self.optim_d = Adam(self.discriminator.parameters(), lr=self.lr_d)
 
         # Definitions of real [1, 1, 1, ...] and fake [0, 0, 0, ...] scores
-        self.all_real_score = Variable(torch.ones(self.batch_size)).to(self.device)
-        self.all_fake_score = Variable(torch.zeros(self.batch_size)).to(self.device)
+        self.all_real_score = lambda size: Variable(torch.ones(size)).to(self.device)
+        self.all_fake_score = lambda size: Variable(torch.zeros(size)).to(self.device)
 
     def generate_noise(self):
         """Generates a batch of 2D noise to be used in image generation."""
@@ -86,7 +87,7 @@ class CDCGAN:
         # Check how the discriminator rates generated images
         # Compare to all being scored as real because this is the goal of the generator
         score = self.score_generated_images()
-        loss = self.loss(score, self.all_real_score)
+        loss = self.loss(score, self.all_real_score(score.size(0)))
 
         loss.backward()
         self.optim_g.step()
@@ -99,13 +100,13 @@ class CDCGAN:
 
         # Check how the discriminator rates real images
         # Compare to all being scored as real since this is the goal of the discriminator
-        real_loss = self.loss(
-            self.discriminator(real_images, real_labels), self.all_real_score
-        )
+        score = self.discriminator(real_images, real_labels)
+        real_loss = self.loss(score, self.all_real_score(score.size(0)))
 
         # Check how the discriminator rates generated images
         # Compare to all being scored as fake since this is the goal of the discriminator
-        fake_loss = self.loss(self.score_generated_images(), self.all_fake_score)
+        score = self.score_generated_images()
+        fake_loss = self.loss(score, self.all_fake_score(score.size(0)))
 
         # Total loss reflects how many total images the discriminator gets wrong (false positive + negative)
         loss_d = real_loss + fake_loss
@@ -143,4 +144,13 @@ class CDCGAN:
         save_state(self.discriminator, f"discriminator_{timestamp}")
 
 
-CDCGAN().train()
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--timestamp",
+    required=False,
+    help="The timestamp on the model to continue training (format: generator_[timestamp].pt)",
+)
+opt = parser.parse_args()
+
+
+CDCGAN(continue_from_timestamp=opt.timestamp).train()
