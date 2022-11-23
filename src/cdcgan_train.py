@@ -9,29 +9,21 @@ from torch.utils.data import DataLoader
 
 from cdcgan import Discriminator, Generator
 from dataset import FashionMNIST
-from util import get_device, save_state
+from util import get_device, save_state, load_state
 
 
 class CDCGAN:
-    def __init__(
-        self,
-        n_epochs=100000,
-        lr=1e-4,
-        batch_size=32,
-        allow_cuda=True,
-        seed=42,
-        dataset=FashionMNIST(),
-    ):
+    def __init__(self, continue_from=None):
         # Parameters
-        self.n_epochs = n_epochs
-        self.lr_g = self.lr_d = lr
-        self.batch_size = batch_size
-        self.device = get_device(allow_cuda, seed)
-
+        self.device = get_device(allow_cuda=True, seed=42)
+        self.n_epochs = 1000
+        self.n_saves = 100
+        self.lr_g = self.lr_d = 1e-4
+        self.batch_size = 32
         self.noise_size = 10
 
         # Dataset and dataloader
-        self.dataset = dataset
+        self.dataset = FashionMNIST()
         self.dataloader = DataLoader(
             self.dataset, batch_size=self.batch_size, shuffle=True
         )
@@ -47,6 +39,11 @@ class CDCGAN:
             img_size_in=self.dataset.img_size,
             n_labels=self.dataset.n_labels,
         ).to(self.device)
+
+        # Load state if we are continuing training existing data
+        if continue_from:
+            load_state(self.generator, f"generator_{continue_from}")
+            load_state(self.discriminator, f"discriminator_{continue_from}")
 
         # Loss function and optimizers
         self.loss = nn.BCELoss()
@@ -128,20 +125,19 @@ class CDCGAN:
 
                 self.generator.train()  # Sets the generator into training mode.
                 loss_g = self.step_generator()
-                loss_d = self.step_discriminator(real_images, real_labels)
                 self.generator.eval()  # Sets the generator into evaluation mode.
+                self.discriminator.train()
+                loss_d = self.step_discriminator(real_images, real_labels)
+                self.discriminator.eval()
 
             print(
                 f"Epoch {epoch} -> Generator loss: {loss_g}, Discriminator loss: {loss_d}"
             )
 
-            if epoch % (self.n_epochs // 10) == 0:
+            if epoch % (self.n_epochs // self.n_saves) == 0 or epoch == self.n_epochs:
                 self.save_models()
 
-        self.save_models()
-
     def save_models(self):
-        print("Saving models...")
         timestamp = str(datetime.datetime.utcnow()).replace(" ", "-")
         save_state(self.generator, f"generator_{timestamp}")
         save_state(self.discriminator, f"discriminator_{timestamp}")

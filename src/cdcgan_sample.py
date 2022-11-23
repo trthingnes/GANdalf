@@ -11,14 +11,15 @@ from util import load_state
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--file",
+    "--timestamp",
     required=True,
-    help="The name of the generator model file to use (format: [name].pt)",
+    help="The timestamp on the generator model to use (format: generator_[timestamp].pt)",
 )
 opt = parser.parse_args()
 
 generator = load_state(
-    Generator(img_size_in=10, img_size_out=28, n_labels=10), opt.file
+    Generator(img_size_in=10, img_size_out=28, n_labels=10),
+    f"generator_{opt.timestamp}",
 )
 sqrt_samples = 5
 
