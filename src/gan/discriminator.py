@@ -30,7 +30,7 @@ class Discriminator(nn.Module):
             nn.Sigmoid(),
         )
 
-    def forward(self, images, labels):
+    def forward(self, images):
         """Takes a list of images with labels and returns the probability of them being real."""
         images = self.hidden_layer1(images)  # Input: 28x28, output: 14x14
         images = self.hidden_layer2(images)  # Input: 14x14, output 7x7

@@ -46,7 +46,7 @@ class Generator(nn.Module):
 
         # Apply initial dense (linear) layers
         noise = self.apply_noise_layer(n_images, noise)
-
+        images = noise
         # Apply hidden layers
         images = self.hidden_layer1(images)  # Input: 7x7, output: 14x14
         images = self.hidden_layer2(images)  # Input: 14x14, output: 28x28

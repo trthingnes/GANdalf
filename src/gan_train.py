@@ -111,7 +111,7 @@ class GAN:
     def train(self):
         loss_g = loss_d = 0
         for epoch in range(1, self.n_epochs + 1):
-            for (real_images) in self.dataloader:
+            for (real_images, _) in self.dataloader:
                 real_images = Variable(real_images).to(self.device)
 
                 self.generator.train()  # Sets the generator into training mode.

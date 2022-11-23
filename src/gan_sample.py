@@ -18,20 +18,18 @@ parser.add_argument(
 opt = parser.parse_args()
 
 generator = load_state(
-    Generator(img_size_in=10, img_size_out=28, n_labels=10), opt.file
+    Generator(img_size_in=10, img_size_out=28), opt.file
 )
 sqrt_samples = 5
 
 noise = torch.randn(sqrt_samples**2, 100)
-labels_g = torch.LongTensor(np.random.randint(0, 10, sqrt_samples**2))
-images_g = generator(noise, labels_g).squeeze().detach().numpy()
+images_g = generator(noise).squeeze().detach().numpy()
 
 fig = plt.figure(figsize=(sqrt_samples, sqrt_samples))
 grid = ImageGrid(fig, 111, nrows_ncols=(sqrt_samples, sqrt_samples), axes_pad=0.3)
 
-for ax, label, image in zip(grid, labels_g, images_g):
+for ax, image in zip(grid,images_g):
     label_names = MNIST(root="training_data").classes
-    ax.set_title(f"{label_names[label.item()]} / {label.item()}")
     ax.imshow(image, cmap="gray")
 
 plt.show()
