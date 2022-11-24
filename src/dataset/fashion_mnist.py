@@ -6,11 +6,7 @@ class FashionMNIST(datasets.FashionMNIST):
     def __init__(self):
         super().__init__(
             root="training_data",
-            transform=transforms.Compose(
-                [
-                    transforms.ToTensor(),
-                ]
-            ),
+            transform=transforms.ToTensor(),
             download=True,
         )
         self.labels = self.classes

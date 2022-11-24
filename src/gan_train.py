@@ -1,4 +1,6 @@
 import datetime
+import logging
+import sys
 
 import numpy as np
 import torch
@@ -134,5 +136,11 @@ class GAN:
         save_state(self.generator, f"generator_{timestamp}")
         save_state(self.discriminator, f"discriminator_{timestamp}")
 
+logging.basicConfig(
+    format="[%(levelname)s] %(asctime)s: %(message)s",
+    encoding="utf-8",
+    level=logging.DEBUG,
+    handlers=[logging.FileHandler("gandalf.log"), logging.StreamHandler(sys.stdout)],
+)
 
 GAN().train()

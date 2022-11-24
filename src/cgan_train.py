@@ -114,14 +114,12 @@ class CGAN:
                 loss_d = self.step_discriminator(real_images, real_labels)
                 self.generator.eval()
 
-            print(
+            logging.info(
                 f"Epoch {epoch} -> Generator loss: {loss_g}, Discriminator loss: {loss_d}"
             )
 
-        print("Saving models...")
         timestamp = str(datetime.datetime.utcnow()).replace(" ", "-")
         save_state(self.generator, f"generator_{timestamp}")
         save_state(self.discriminator, f"discriminator_{timestamp}")
-
 
 CGAN().train()
