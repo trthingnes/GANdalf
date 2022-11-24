@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import logging
 import sys
@@ -11,42 +12,43 @@ from torch.utils.data import DataLoader
 
 from gan import Discriminator, Generator
 from dataset import MNIST
-from util import get_device, save_state
+from util import get_device, get_device_count, load_state, save_state
 
 
-class GAN:
-    def __init__(
-        self,
-        n_epochs=30,
-        lr=1e-4,
-        batch_size=32,
-        allow_cuda=True,
-        seed=42,
-        dataset=MNIST(),
-    ):
+class CDCGAN:
+    def __init__(self, continue_from_timestamp=None):
         # Parameters
-        self.n_epochs = n_epochs
-        self.lr_g = self.lr_d = lr
-        self.batch_size = batch_size
-        self.device = get_device(allow_cuda, seed)
-
+        self.device = get_device(allow_cuda=True, seed=42)
+        self.n_epochs = 10
+        self.n_saves = 10
+        self.lr_g = self.lr_d = 1e-4
+        self.batch_size = 32 * get_device_count(cuda=(self.device.type == "cuda"))
         self.noise_size = 10
 
         # Dataset and dataloader
-        self.dataset = dataset
+        self.dataset = MNIST()
         self.dataloader = DataLoader(
             self.dataset, batch_size=self.batch_size, shuffle=True
         )
 
         # Generator and discriminator models
-        self.generator = Generator(
-            img_size_in=self.noise_size,
-            img_size_out=self.dataset.img_size,
+        self.generator = nn.DataParallel(
+            Generator(
+                img_size_in=self.noise_size,
+                img_size_out=self.dataset.img_size
+            )
         ).to(self.device)
 
-        self.discriminator = Discriminator(
-            img_size_in=self.dataset.img_size
+        self.discriminator = nn.DataParallel(
+            Discriminator(
+                img_size_in=self.dataset.img_size,
+            )
         ).to(self.device)
+
+        # Load state if we are continuing training existing data
+        if continue_from_timestamp:
+            load_state(self.generator, f"generator_{continue_from_timestamp}")
+            load_state(self.discriminator, f"discriminator_{continue_from_timestamp}")
 
         # Loss function and optimizers
         self.loss = nn.BCELoss()
@@ -54,13 +56,21 @@ class GAN:
         self.optim_d = Adam(self.discriminator.parameters(), lr=self.lr_d)
 
         # Definitions of real [1, 1, 1, ...] and fake [0, 0, 0, ...] scores
-        self.all_real_score = Variable(torch.ones(self.batch_size)).to(self.device)
-        self.all_fake_score = Variable(torch.zeros(self.batch_size)).to(self.device)
+        self.all_real_score = lambda size: Variable(torch.ones(size)).to(self.device)
+        self.all_fake_score = lambda size: Variable(torch.zeros(size)).to(self.device)
 
     def generate_noise(self):
         """Generates a batch of 2D noise to be used in image generation."""
         return Variable(
             torch.randn(self.batch_size, self.noise_size, self.noise_size)
+        ).to(self.device)
+
+    def generate_labels(self):
+        """Generates a batch of labels to be used in image generation."""
+        return Variable(
+            torch.LongTensor(
+                np.random.randint(0, self.batch_size)
+            )
         ).to(self.device)
 
     def score_generated_images(self):
@@ -80,7 +90,7 @@ class GAN:
         # Check how the discriminator rates generated images
         # Compare to all being scored as real because this is the goal of the generator
         score = self.score_generated_images()
-        loss = self.loss(score, self.all_real_score)
+        loss = self.loss(score, self.all_real_score(score.size(0)))
 
         loss.backward()
         self.optim_g.step()
@@ -93,13 +103,13 @@ class GAN:
 
         # Check how the discriminator rates real images
         # Compare to all being scored as real since this is the goal of the discriminator
-        real_loss = self.loss(
-            self.discriminator(real_images), self.all_real_score
-        )
+        score = self.discriminator(real_images)
+        real_loss = self.loss(score, self.all_real_score(score.size(0)))
 
         # Check how the discriminator rates generated images
         # Compare to all being scored as fake since this is the goal of the discriminator
-        fake_loss = self.loss(self.score_generated_images(), self.all_fake_score)
+        score = self.score_generated_images()
+        fake_loss = self.loss(score, self.all_fake_score(score.size(0)))
 
         # Total loss reflects how many total images the discriminator gets wrong (false positive + negative)
         loss_d = real_loss + fake_loss
@@ -118,23 +128,31 @@ class GAN:
 
                 self.generator.train()  # Sets the generator into training mode.
                 loss_g = self.step_generator()
-                loss_d = self.step_discriminator(real_images)
                 self.generator.eval()  # Sets the generator into evaluation mode.
+                self.discriminator.train()
+                loss_d = self.step_discriminator(real_images)
+                self.discriminator.eval()
 
-            print(
+            logging.info(
                 f"Epoch {epoch} -> Generator loss: {loss_g}, Discriminator loss: {loss_d}"
             )
 
-            if epoch % (self.n_epochs // 10) == 0:
+            if epoch % (self.n_epochs // self.n_saves) == 0 or epoch == self.n_epochs:
                 self.save_models()
 
-        self.save_models()
-
     def save_models(self):
-        print("Saving models...")
         timestamp = str(datetime.datetime.utcnow()).replace(" ", "-")
         save_state(self.generator, f"generator_{timestamp}")
         save_state(self.discriminator, f"discriminator_{timestamp}")
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--timestamp",
+    required=False,
+    help="The timestamp on the model to continue training (format: generator_[timestamp].pt)",
+)
+opt = parser.parse_args()
 
 logging.basicConfig(
     format="[%(levelname)s] %(asctime)s: %(message)s",
@@ -143,4 +161,4 @@ logging.basicConfig(
     handlers=[logging.FileHandler("gandalf.log"), logging.StreamHandler(sys.stdout)],
 )
 
-GAN().train()
+CDCGAN(continue_from_timestamp=opt.timestamp).train()

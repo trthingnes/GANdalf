@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from mpl_toolkits.axes_grid1 import ImageGrid
 from torchvision.datasets import MNIST
+import torch.nn as nn
 
 from gan import Generator
 from util import load_state
@@ -18,7 +19,7 @@ parser.add_argument(
 opt = parser.parse_args()
 
 generator = load_state(
-    Generator(img_size_in=10, img_size_out=28), opt.file
+   nn.DataParallel( Generator(img_size_in=10, img_size_out=28)), opt.file
 )
 sqrt_samples = 5
 
