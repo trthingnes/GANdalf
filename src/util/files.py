@@ -20,6 +20,12 @@ def save_state(model, name, directory=default_directory):
 
 def load_state(model, name, directory=default_directory):
     """Reads a models state dict from the file with the given name and loads it in the model."""
-    model.load_state_dict(torch.load(f"{directory}/{filename_format(name)}"))
+    if torch.cuda.is_available():
+        state = torch.load(f"{directory}/{filename_format(name)}")
+    else:
+        state = torch.load(
+            f"{directory}/{filename_format(name)}", map_location=torch.device("cpu")
+        )
+    model.load_state_dict(state)
     logging.info(f"Loaded file '{filename_format(name)}'")
     return model
