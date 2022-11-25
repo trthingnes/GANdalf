@@ -10,8 +10,8 @@ from torch.autograd import Variable
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from dcgan import Discriminator, Generator
 from dataset import MNIST
+from dcgan import Discriminator, Generator
 from util import get_device, get_device_count, load_state, save_state
 
 
@@ -33,10 +33,7 @@ class CDCGAN:
 
         # Generator and discriminator models
         self.generator = nn.DataParallel(
-            Generator(
-                img_size_in=self.noise_size,
-                img_size_out=self.dataset.img_size
-            )
+            Generator(img_size_in=self.noise_size, img_size_out=self.dataset.img_size)
         ).to(self.device)
 
         self.discriminator = nn.DataParallel(
@@ -67,11 +64,9 @@ class CDCGAN:
 
     def generate_labels(self):
         """Generates a batch of labels to be used in image generation."""
-        return Variable(
-            torch.LongTensor(
-                np.random.randint(0, self.batch_size)
-            )
-        ).to(self.device)
+        return Variable(torch.LongTensor(np.random.randint(0, self.batch_size))).to(
+            self.device
+        )
 
     def score_generated_images(self):
         """Generates a batch of images and gets them scored by the discriminator."""

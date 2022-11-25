@@ -30,7 +30,7 @@ images_g = generator(noise).squeeze().cpu().detach().numpy()
 fig = plt.figure(figsize=(sqrt_samples, sqrt_samples))
 grid = ImageGrid(fig, 111, nrows_ncols=(sqrt_samples, sqrt_samples), axes_pad=0.3)
 
-for ax,image in zip(grid, images_g):
+for ax, image in zip(grid, images_g):
     ax.imshow(image, cmap="gray")
 
 plt.show()

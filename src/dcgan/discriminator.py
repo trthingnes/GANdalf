@@ -14,7 +14,7 @@ class Discriminator(nn.Module):
         self.hidden_layer1 = nn.Sequential(
             nn.Conv2d(1, 64, stride=(2, 2), kernel_size=(2, 2)),
             nn.LeakyReLU(self.negative_slope, inplace=True),
-        )   
+        )
 
         self.hidden_layer2 = nn.Sequential(
             nn.Conv2d(64, 128, stride=(2, 2), kernel_size=(2, 2)),

@@ -122,4 +122,5 @@ class CGAN:
         save_state(self.generator, f"generator_{timestamp}")
         save_state(self.discriminator, f"discriminator_{timestamp}")
 
+
 CGAN().train()

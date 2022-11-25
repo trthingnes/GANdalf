@@ -19,7 +19,6 @@ class Discriminator(nn.Module):
             nn.Sigmoid()
         )
 
-
     @staticmethod
     def hidden_layer(in_features, out_features):
         negative_slope, dropout = 0.2, 0.3
