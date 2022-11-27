@@ -1,13 +1,11 @@
 import argparse
 
 import matplotlib.pyplot as plt
-import numpy as np
 import torch
 import torch.nn as nn
 from mpl_toolkits.axes_grid1 import ImageGrid
-from torchvision.datasets import MNIST
 
-from dcgan import Generator
+from models.dcgan import Generator
 from util import load_state
 
 parser = argparse.ArgumentParser()
@@ -22,7 +20,8 @@ generator = load_state(
     nn.DataParallel(Generator(img_size_in=10, img_size_out=28)),
     f"generator_{opt.timestamp}",
 )
-sqrt_samples = 5
+
+sqrt_samples = 10
 
 noise = torch.randn(sqrt_samples**2, 100)
 images_g = generator(noise).squeeze().cpu().detach().numpy()

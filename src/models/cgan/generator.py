@@ -25,7 +25,6 @@ class Generator(nn.Module):
     def hidden_layer(in_features: int, out_features: int):
         negative_slope = 0.2
         return (
-            # TODO: Change to Conv2D
             nn.Linear(
                 in_features, out_features
             ),  # Linear model xW + b (see lecture 1: linear regression)
@@ -44,11 +43,9 @@ class Generator(nn.Module):
         n_images = noise.size(
             0
         )  # Noise is 3 dimentions, the first of which is the number of noise images
-        # TODO: Make this stay a 2D image.
         noise = noise.view(
             n_images, self.n_pixels_in
         )  # Turn the 2D noise "images" into a 1D list of numbers
-        # TODO: Reshape this to be 2D output.
         label_dummies = self.label_embedding(
             labels
         )  # Get the "dummy" values for the label value

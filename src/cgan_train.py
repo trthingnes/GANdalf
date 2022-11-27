@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import sys
 
@@ -6,12 +7,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision.transforms as transforms
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 
-from cgan import Discriminator, Generator
 from dataset import FashionMNIST
+from models.cgan import Discriminator, Generator
 
 # Add project to path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -21,7 +21,7 @@ from util import get_device, save_state
 class CGAN:
     def __init__(
         self,
-        n_epochs=30,
+        n_epochs=10,
         lr=1e-4,
         seed=42,
         batch_size=32,
@@ -122,5 +122,12 @@ class CGAN:
         save_state(self.generator, f"generator_{timestamp}")
         save_state(self.discriminator, f"discriminator_{timestamp}")
 
+
+logging.basicConfig(
+    format="[%(levelname)s] %(asctime)s: %(message)s",
+    encoding="utf-8",
+    level=logging.DEBUG,
+    handlers=[logging.FileHandler("gandalf.log"), logging.StreamHandler(sys.stdout)],
+)
 
 CGAN().train()

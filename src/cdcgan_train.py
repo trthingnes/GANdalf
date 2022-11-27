@@ -10,8 +10,8 @@ from torch.autograd import Variable
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 
-from cdcgan import Discriminator, Generator
 from dataset import FashionMNIST
+from models.cdcgan import Discriminator, Generator
 from util import get_device, get_device_count, load_state, save_state
 
 

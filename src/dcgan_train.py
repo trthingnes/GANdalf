@@ -11,11 +11,11 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 
 from dataset import MNIST
-from dcgan import Discriminator, Generator
+from models.dcgan import Discriminator, Generator
 from util import get_device, get_device_count, load_state, save_state
 
 
-class CDCGAN:
+class DCGAN:
     def __init__(self, continue_from_timestamp=None):
         # Parameters
         self.device = get_device(allow_cuda=True, seed=42)
@@ -156,4 +156,4 @@ logging.basicConfig(
     handlers=[logging.FileHandler("gandalf.log"), logging.StreamHandler(sys.stdout)],
 )
 
-CDCGAN(continue_from_timestamp=opt.timestamp).train()
+DCGAN(continue_from_timestamp=opt.timestamp).train()
